@@ -33,6 +33,13 @@ def parityCheckMatrix(G):
     H[:,G.shape[1]-p:] = np.identity(p)
     return H
 
+def encode(d,G):
+    """Encode data to transmitted data"""
+    return np.remainder(np.matmul(d,G),2)
 
-print(generatorMatrix(3))
-print(parityCheckMatrix(generatorMatrix(3)))
+
+# print(generatorMatrix(4))
+# print(parityCheckMatrix(generatorMatrix(4)))
+d = np.random.randint(0,2,11)
+print(d)
+print(encode(d,generatorMatrix(4)))
