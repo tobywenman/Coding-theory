@@ -1,5 +1,6 @@
 import numpy as np
 import math
+from matplotlib import pyplot as plt 
 
 def generatorMatrix(p):
     """Create Generator matrix for hamming code"""
@@ -45,6 +46,7 @@ def calcSyndrome(H,c):
 def generateSyndromes(H):
     n = np.shape(H)[1]
     lookup = {}
+    lookup[(0.0,0.0,0.0,0.0)] = np.zeros(n)
     for i in range(n):
         e = np.zeros(n)
         e[i] = 1
@@ -57,20 +59,45 @@ def decode(H,c,lookup):
     e = lookup[syndrome]
     return np.remainder(c+e,2)[:k]
 
-# print(generatorMatrix(4))
-# print(parityCheckMatrix(generatorMatrix(4)))
-d = np.random.randint(0,2,11)
-G = generatorMatrix(4)
-H = parityCheckMatrix(G)
+def generateError(p,a):
+    n = 2**(p)-1
+    e = np.zeros(n)
+    for i in range(n):
+        if np.random.random() < a:
+            e[i] = 1
+    return e
 
-lookup = generateSyndromes(H)
+def simulate(p,tests,iter):
+    G = generatorMatrix(p)
+    H = parityCheckMatrix(G)
+    n = 2**(p)-1 
+    k = n-p
+    lookup = generateSyndromes(H)
+    results = np.zeros((2,len(tests)))
+    results[0] = tests
+    testNum = 0
+    for i in tests:
+        for j in range(iter):
+            d = np.random.randint(0,2,k)
+            c = encode(d,G)
+            e = generateError(p,i)
+            #print(e)
+            v = np.remainder(c+e,2)
+            corrected = decode(H,v,lookup)
+            errors = 0
 
-print(d)
-c = encode(d,G)
-print(c)
-v = np.remainder(c+np.array([0,0,1,0,0,0,0,0,0,0,0,0,0,0,0]),2)
+            for bit in range(len(d)):
+                if d[bit] != corrected[bit]:
+                    errors += 1
+            results[1][testNum] += errors/iter/k
+        testNum += 1
+    return results
+            
 
-print(decode(H,v,lookup))
-# for i in lookup:
-#     print(i, lookup[i])
-
+result = simulate(4,np.arange(0,0.2,0.01),1000)
+print(result)
+plt.title("BER vs Probability of error")
+plt.xlabel("P")
+plt.ylabel("BER")
+plt.plot(result)
+plt.show()
