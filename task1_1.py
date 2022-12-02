@@ -40,23 +40,37 @@ def encode(d,G):
 def calcSyndrome(H,c):
     """Find sydrome for a recieved word"""
     Ht = np.transpose(H)
-    return np.remainder(np.matmul(c,Ht),2)
+    return tuple(np.remainder(np.matmul(c,Ht),2))
 
 def generateSyndromes(H):
-    Ht = np.transpose(H)
-    n = np.shape(Ht)[0]
+    n = np.shape(H)[1]
+    lookup = {}
     for i in range(n):
         e = np.zeros(n)
         e[i] = 1
-        print(np.matmul(e,Ht))
+        lookup[calcSyndrome(H,e)] = e
+    return lookup
+
+def decode(H,c,lookup):
+    syndrome = calcSyndrome(H,c)
+    k = np.shape(H)[1]-np.shape(H)[0]
+    e = lookup[syndrome]
+    return np.remainder(c+e,2)[:k]
 
 # print(generatorMatrix(4))
 # print(parityCheckMatrix(generatorMatrix(4)))
 d = np.random.randint(0,2,11)
 G = generatorMatrix(4)
 H = parityCheckMatrix(G)
-print(d)
-print(encode(d,G))
-print(calcSyndrome(encode(d,G)+np.array([1]+14*[0]),H))
 
-#print(generateSyndromes(H))
+lookup = generateSyndromes(H)
+
+print(d)
+c = encode(d,G)
+print(c)
+v = np.remainder(c+np.array([0,0,1,0,0,0,0,0,0,0,0,0,0,0,0]),2)
+
+print(decode(H,v,lookup))
+# for i in lookup:
+#     print(i, lookup[i])
+
