@@ -59,13 +59,13 @@ def decode(H,c,lookup):
     e = lookup[syndrome]
     return np.remainder(c+e,2)[:k]
 
-def generateError(p,a):
+def generateError(p,a,c):
     n = 2**(p)-1
     e = np.zeros(n)
     for i in range(n):
         if np.random.random() < a:
             e[i] = 1
-    return e
+    return np.remainder(e+c,2)
 
 def simulate(p,tests,iter,errorFunc):
     #create data needed for hamming code
@@ -85,8 +85,7 @@ def simulate(p,tests,iter,errorFunc):
             #simulate channel and code
             d = np.random.randint(0,2,k)
             c = encode(d,G)
-            e = errorFunc(p,i)
-            v = np.remainder(c+e,2)
+            v = errorFunc(p,i,c)
             corrected = decode(H,v,lookup)
             
             #check for and count errors
