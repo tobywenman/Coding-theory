@@ -101,23 +101,28 @@ def simulate(p,tests,iter):
         testNum += 1
 
     return results
-            
-probs = np.linspace(0,0.2,21)
-result = simulate(4,probs,10000)
-theory = np.zeros((2,len(result[0])),dtype="float64")
 
-#Calculate theoretical BER
-n = 15
-for i in [0,1]:
-    theory[i] = np.multiply(np.power(np.multiply((math.factorial(n)/math.factorial(n-i)),probs),i),np.power(np.subtract(1,probs),n-i))
-pd = np.multiply(4/15,(np.subtract(1,np.add(theory[0],theory[1]))))
+if __name__=="__main__":            
+    probs = np.linspace(0,0.2,21)
+    result = simulate(4,probs,10000)
+    theory = np.zeros((2,len(result[0])),dtype="float64")
 
-plt.title("BER vs Probability of error")
-plt.xlabel("P")
-plt.ylabel("BER")
-plt.yscale("log")
-plt.xlim(max(result[0]), min(result[0]))
-noCode, = plt.plot(result[0],result[0])
-simulated, = plt.plot(result[0],result[1])
-theoretical, = plt.plot(probs,pd)
-plt.show()
+    #Calculate theoretical BER
+    n = 15
+    for i in [0,1]:
+        theory[i] = np.multiply(np.power(np.multiply((math.factorial(n)/math.factorial(n-i)),probs),i),np.power(np.subtract(1,probs),n-i))
+    pd = np.multiply(4/15,(np.subtract(1,np.add(theory[0],theory[1]))))
+
+    plt.title("BER vs Probability of error")
+    plt.xlabel("P")
+    plt.ylabel("BER")
+    plt.yscale("log")
+    plt.xlim(max(result[0]), min(result[0]))
+    plt.plot(result[0],result[0],label="No code")
+    plt.plot(result[0],result[1],label="Simulated")
+    plt.plot(probs,pd,label="Theoretical")
+
+    plt.legend()
+    plt.grid(which="minor",axis="both")
+
+    plt.show()
