@@ -2,6 +2,8 @@ import numpy as np
 import math
 from matplotlib import pyplot as plt 
 
+from scipy.stats import binom
+
 def generatorMatrix(p):
     """Create Generator matrix for hamming code"""
 
@@ -68,36 +70,54 @@ def generateError(p,a):
     return e
 
 def simulate(p,tests,iter):
+    #create data needed for hamming code
     G = generatorMatrix(p)
     H = parityCheckMatrix(G)
     n = 2**(p)-1 
     k = n-p
     lookup = generateSyndromes(H)
+
+    #initalise array to store results
     results = np.zeros((2,len(tests)))
     results[0] = tests
     testNum = 0
     for i in tests:
         for j in range(iter):
+
+            #simulate channel and code
             d = np.random.randint(0,2,k)
             c = encode(d,G)
             e = generateError(p,i)
-            #print(e)
             v = np.remainder(c+e,2)
             corrected = decode(H,v,lookup)
+            
+            #check for and count errors
             errors = 0
-
             for bit in range(len(d)):
                 if d[bit] != corrected[bit]:
                     errors += 1
             results[1][testNum] += errors/iter/k
+
         testNum += 1
+
     return results
             
+probs = np.linspace(0,0.2,21)
+result = simulate(4,probs,10000)
+theory = np.zeros((2,len(result[0])),dtype="float64")
 
-result = simulate(4,np.arange(0,0.2,0.01),1000)
-print(result)
+#Calculate theoretical BER
+n = 15
+for i in [0,1]:
+    theory[i] = np.multiply(np.power(np.multiply((math.factorial(n)/math.factorial(n-i)),probs),i),np.power(np.subtract(1,probs),n-i))
+pd = np.multiply(4/15,(np.subtract(1,np.add(theory[0],theory[1]))))
+
 plt.title("BER vs Probability of error")
 plt.xlabel("P")
 plt.ylabel("BER")
-plt.plot(result)
+plt.yscale("log")
+plt.xlim(max(result[0]), min(result[0]))
+noCode, = plt.plot(result[0],result[0])
+simulated, = plt.plot(result[0],result[1])
+theoretical, = plt.plot(probs,pd)
 plt.show()
