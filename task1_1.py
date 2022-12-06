@@ -2,8 +2,6 @@ import numpy as np
 import math
 from matplotlib import pyplot as plt 
 
-from scipy.stats import binom
-
 def generatorMatrix(p):
     """Create Generator matrix for hamming code"""
 
