@@ -67,7 +67,7 @@ def generateError(p,a):
             e[i] = 1
     return e
 
-def simulate(p,tests,iter):
+def simulate(p,tests,iter,errorFunc):
     #create data needed for hamming code
     G = generatorMatrix(p)
     H = parityCheckMatrix(G)
@@ -85,7 +85,7 @@ def simulate(p,tests,iter):
             #simulate channel and code
             d = np.random.randint(0,2,k)
             c = encode(d,G)
-            e = generateError(p,i)
+            e = errorFunc(p,i)
             v = np.remainder(c+e,2)
             corrected = decode(H,v,lookup)
             
@@ -102,7 +102,7 @@ def simulate(p,tests,iter):
 
 if __name__=="__main__":            
     probs = np.linspace(0,0.2,21)
-    result = simulate(4,probs,10000)
+    result = simulate(4,probs,10000,generateError)
     theory = np.zeros((2,len(result[0])),dtype="float64")
 
     #Calculate theoretical BER
