@@ -30,7 +30,7 @@ def bpsk(p,SNR,c):
 
 if __name__=="__main__": 
     dbs = np.linspace(-10,5,50)
-    result = task1_1.simulate(4,dbs,1000,bpsk)
+    result = task1_1.simulate(4,dbs,1000,bpsk,task1_1.encode,task1_1.decode)
 
     plt.title("BER vs Eb/N0")
     plt.xlabel("Eb/N0")
