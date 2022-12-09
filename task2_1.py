@@ -41,23 +41,34 @@ def hammingDist(a,b):
     return dist
 
 def decode(states,v):
-    #working list for the decoded path, path[decoded bit][state][weight or previous state]
+    """decode a convolutional code using Viterbi decoder"""
+    #working list for the decoded path, path[decoded bit][state][weight,bit]
     path = np.array([[[math.inf,-1]]*8]*(len(v)//2))
     path[0][0][0] = 0
+
+    #iterate through all bits
     for i in range(len(v)//2-1):
+
+        #iterate through all states
         for j in range(8):
+
+            #test both branches for 0 or 1 bit
             for k in [0,1]:
-                
+
+                #calculate extra hamming weight for current test
                 weight = hammingDist(v[i*2:i*2+2],states[j][k])
+                #lookup state relating to the tested bit
                 nextState = states[j][2][k]
+
+                #check if current test is better than previous weight
                 if weight+path[i][j][0] < path[i+1][nextState][0]:
+                    #update path variable
                     path[i+1][nextState][0] = weight+path[i][j][0]
                     path[i+1][nextState][1] = k
 
-    #print(path[-10:])
-
     decoded = np.zeros(len(path[:]),dtype=int)
 
+    #loop backwards through path variable to reconstruct data
     for i in range(len(path[:])-1,0,-1):
         minWeight = math.inf
         for j in range(8):
