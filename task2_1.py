@@ -19,15 +19,17 @@ def getCodeword(states,prev,input):
     """Return the bits added to the codeword"""
     return states[prev][input]
 
-def encode(states,d):
+def encode(states,d,termBits):
     """Encode input data using states"""
-    c = np.zeros(len(d)*2,dtype="int")
+    dataWithTermBits = np.concatenate((d,np.zeros(termBits,dtype="int")))
+    print(dataWithTermBits)
+    c = np.zeros(len(dataWithTermBits)*2,dtype="int")
     state = 0
-    for i in range(len(d)):
+    for i in range(len(dataWithTermBits)):
         #Add bits to code word
-        c[i*2:i*2+2] = getCodeword(states,state,d[i]) 
+        c[i*2:i*2+2] = getCodeword(states,state,dataWithTermBits[i]) 
         #set next state
-        state = nextState(states,state,d[i])
+        state = nextState(states,state,dataWithTermBits[i])
     return c
 
 def hammingDist(a,b):
@@ -40,7 +42,7 @@ def hammingDist(a,b):
             dist += 1
     return dist
 
-def decode(states,v):
+def decode(states,v,termBits):
     """decode a convolutional code using Viterbi decoder"""
     #working list for the decoded path, path[decoded bit][state][weight,bit]
     path = np.array([[[math.inf,-1]]*8]*(len(v)//2))
@@ -66,6 +68,11 @@ def decode(states,v):
                     path[i+1][nextState][0] = weight+path[i][j][0]
                     path[i+1][nextState][1] = k
 
+    for i in range(len(path[-1][1:])):
+        path[-1][i+1][0] = math.inf 
+
+    print(path[-1])
+
     decoded = np.zeros(len(path[:]),dtype=int)
 
     #loop backwards through path variable to reconstruct data
@@ -75,17 +82,14 @@ def decode(states,v):
             if path[i][j][0] < minWeight:
                 minWeight = path[i][j][0]
                 decoded[i-1] = path[i][j][1]
-    return decoded
+    return decoded[:-termBits]
 
 
 k = 800
-termBits = 3
 
-d = np.random.randint(0,2,k+termBits)
+d = np.random.randint(0,2,k,dtype="int")
 
-d[-3:] = 0,0,0
+c = encode(states,d,4)
 
-c = encode(states,d)
-
-decoded = decode(states,c)
+decoded = decode(states,c,4)
 print(hammingDist(decoded,d))
