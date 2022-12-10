@@ -59,8 +59,7 @@ def decode(H,c,lookup):
     e = lookup[syndrome]
     return np.remainder(c+e,2)[:k]
 
-def generateError(p,a,c):
-    n = 2**(p)-1
+def generateError(n,a,c):
     e = np.zeros(n)
     for i in range(n):
         if np.random.random() < a:
@@ -85,7 +84,7 @@ def simulate(p,tests,iter,errorFunc):
             #simulate channel and code
             d = np.random.randint(0,2,k)
             c = encode(d,G)
-            v = errorFunc(p,i,c)
+            v = errorFunc(n,i,c)
             corrected = decode(H,v,lookup)
             
             #check for and count errors

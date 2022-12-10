@@ -1,5 +1,7 @@
 import numpy as np
 import math
+from matplotlib import pyplot as plt 
+import task1_2
 
 #variable holding the structure of the state machine (codeword bits for 0 input,codeword bits for 1 input,(state for 0, state for 1))
 states = (((0,0),(1,1),(0,4)),
@@ -22,7 +24,6 @@ def getCodeword(states,prev,input):
 def encode(states,d,termBits):
     """Encode input data using states"""
     dataWithTermBits = np.concatenate((d,np.zeros(termBits,dtype="int")))
-    print(dataWithTermBits)
     c = np.zeros(len(dataWithTermBits)*2,dtype="int")
     state = 0
     for i in range(len(dataWithTermBits)):
@@ -44,8 +45,8 @@ def hammingDist(a,b):
 
 def decode(states,v,termBits):
     """decode a convolutional code using Viterbi decoder"""
-    #working list for the decoded path, path[decoded bit][state][weight,bit]
-    path = np.array([[[math.inf,-1]]*8]*(len(v)//2))
+    #working list for the decoded path, path[decoded bit][state][weight,bit,previous]
+    path = np.array([[[math.inf,-1,-1]]*8]*(len(v)//2))
     path[0][0][0] = 0
 
     #iterate through all bits
@@ -67,29 +68,62 @@ def decode(states,v,termBits):
                     #update path variable
                     path[i+1][nextState][0] = weight+path[i][j][0]
                     path[i+1][nextState][1] = k
+                    path[i+1][nextState][2] = j
 
     for i in range(len(path[-1][1:])):
         path[-1][i+1][0] = math.inf 
 
-    print(path[-1])
 
-    decoded = np.zeros(len(path[:]),dtype=int)
+    decoded = np.zeros(len(path[:]),dtype="int")
 
     #loop backwards through path variable to reconstruct data
+    prevState = 0
     for i in range(len(path[:])-1,0,-1):
-        minWeight = math.inf
-        for j in range(8):
-            if path[i][j][0] < minWeight:
-                minWeight = path[i][j][0]
-                decoded[i-1] = path[i][j][1]
+        
+        decoded[i-1] = path[i][prevState][1]
+        prevState = int(path[i][prevState][2])
     return decoded[:-termBits]
 
+def generateError(c,p):
+    e = np.zeros(len(c))
+    for i in range(len(c)):
+        if np.random.random() < p:
+            e[i] = 1
+    return np.remainder(e+c,2)
 
 k = 800
 
-d = np.random.randint(0,2,k,dtype="int")
+dbs = np.linspace(-10,5,50)
 
-c = encode(states,d,4)
+results = np.zeros((2,len(dbs)))
+results[0] = dbs
+testNum = 0
+for i in dbs:
+    print(testNum)
+    for j in range(100):
 
-decoded = decode(states,c,4)
-print(hammingDist(decoded,d))
+        #simulate channel and code
+        d = np.random.randint(0,2,k)
+        c = encode(states,d,4)
+        v = task1_2.bpsk(len(c),i,c)
+        corrected = decode(states,v,4)
+        
+        #check for and count errors
+        errors = 0
+        for bit in range(len(d)):
+            if d[bit] != corrected[bit]:
+                errors += 1
+        results[1][testNum] += errors/100/k
+
+    testNum += 1
+
+plt.title("BER vs Probability of error")
+plt.xlabel("P")
+plt.ylabel("BER")
+plt.yscale("log")
+plt.plot(results[0],results[1],label="Simulated")
+
+plt.legend()
+plt.grid(which="minor",axis="both")
+
+plt.show()

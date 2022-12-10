@@ -6,8 +6,7 @@ from matplotlib import pyplot as plt
 def dbtoabs(db):
     return 10**(db/10)
 
-def bpsk(p,SNR,c):
-    n = 2**(p)-1
+def bpsk(n,SNR,c):
     e = np.zeros(n)
     variance = 1/dbtoabs(SNR)/2
 
@@ -19,7 +18,7 @@ def bpsk(p,SNR,c):
     #generate error and add to sent word
     for i in range(n):
         e[i] = np.random.normal(scale=math.sqrt(variance))
-    c += e
+    c = np.add(e,c)
     #implement hard decoding
     for i in range(n):
         if c[i] < 0:
