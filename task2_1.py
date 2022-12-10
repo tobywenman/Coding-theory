@@ -93,35 +93,42 @@ def generateError(c,p):
 
 k = 800
 
-dbs = np.linspace(-10,5,50)
+dbs = np.linspace(-5,15,25)
 
-results = np.zeros((2,len(dbs)))
+results = np.zeros((3,len(dbs)))
 results[0] = dbs
 testNum = 0
 for i in dbs:
     print(testNum)
-    for j in range(100):
+    for j in range(500):
 
         #simulate channel and code
         d = np.random.randint(0,2,k)
         c = encode(states,d,4)
-        v = task1_2.bpsk(len(c),i,c)
+        v = task1_2.bpsk(i,c)
         corrected = decode(states,v,4)
         
+        uncoded = task1_2.bpsk(i,d)
+
         #check for and count errors
         errors = 0
+        uncodedErrors = 0
         for bit in range(len(d)):
             if d[bit] != corrected[bit]:
                 errors += 1
-        results[1][testNum] += errors/100/k
-
+            if d[bit] != uncoded[bit]:
+                uncodedErrors += 1
+        results[1][testNum] += errors/500/k
+        results[2][testNum] += uncodedErrors/500/k
+ 
     testNum += 1
 
 plt.title("BER vs Probability of error")
-plt.xlabel("P")
+plt.xlabel("Eb/N0")
 plt.ylabel("BER")
 plt.yscale("log")
-plt.plot(results[0],results[1],label="Simulated")
+plt.plot(results[0],results[1],label="Convolutional code")
+plt.plot(results[0],results[2],label="No code")
 
 plt.legend()
 plt.grid(which="minor",axis="both")

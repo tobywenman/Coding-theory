@@ -6,26 +6,30 @@ from matplotlib import pyplot as plt
 def dbtoabs(db):
     return 10**(db/10)
 
-def bpsk(n,SNR,c):
+def bpsk(SNR,c):
+    n=len(c)
     e = np.zeros(n)
+    r = np.zeros(n)
     variance = 1/dbtoabs(SNR)/2
 
     #change bit values to signal
     for i in range(n):
         if c[i] == 0:
-            c[i] = -1
+            r[i] = -1
+        else:
+            r[i] = 1
 
     #generate error and add to sent word
     for i in range(n):
         e[i] = np.random.normal(scale=math.sqrt(variance))
-    c = np.add(e,c)
+    r = np.add(e,r)
     #implement hard decoding
     for i in range(n):
-        if c[i] < 0:
-            c[i] = 0
+        if r[i] < 0:
+            r[i] = 0
         else:
-            c[i] = 1
-    return c
+            r[i] = 1
+    return r
 
 if __name__=="__main__": 
     dbs = np.linspace(-10,5,50)
