@@ -38,7 +38,7 @@ def hammingDist(a,b):
     dist = 0
     for i in range(len(a)):
         #check if bits match
-        if a[i] != b[i]:
+        if a[i] != b[i] and a[i] != -1 and b[i] != -1:
             #count unmatched bits
             dist += 1
     return dist
@@ -93,7 +93,7 @@ def generateError(c,p):
 
 k = 800
 
-dbs = np.linspace(-5,15,25)
+dbs = np.linspace(-5,10,25)
 
 results = np.zeros((3,len(dbs)))
 results[0] = dbs
