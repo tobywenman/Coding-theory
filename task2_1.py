@@ -48,7 +48,6 @@ def decode(states,v,termBits):
     #working list for the decoded path, path[decoded bit][state][weight,bit,previous]
     path = np.array([[[math.inf,-1,-1]]*8]*(len(v)//2))
     path[0][0][0] = 0
-
     #iterate through all bits
     for i in range(len(v)//2-1):
 
@@ -91,46 +90,60 @@ def generateError(c,p):
             e[i] = 1
     return np.remainder(e+c,2)
 
-k = 800
+def simulate(k,states,tests,iters,errorFunc):
+    results = np.zeros((4,len(tests)))
+    results[0] = tests
+    testNum = 0
+    for i in tests:
+        print(testNum)
+        for j in range(iters):
 
-dbs = np.linspace(-5,10,25)
+            #simulate channel and code
+            d = np.random.randint(0,2,k)
+            c = encode(states,d,4)
+            v = errorFunc(i,c,0.5)
+            corrected = decode(states,v,4)
+            
+            uncoded = errorFunc(i,d,1)
+            notDecoded = errorFunc(i,d,0.5)
 
-results = np.zeros((3,len(dbs)))
-results[0] = dbs
-testNum = 0
-for i in dbs:
-    print(testNum)
-    for j in range(500):
+            #check for and count errors
+            errors = 0
+            uncodedErrors = 0
+            notDecodedErrors = 0
+            for bit in range(len(d)):
+                if d[bit] != corrected[bit]:
+                    errors += 1
+                if d[bit] != uncoded[bit]:
+                    uncodedErrors += 1
+                if d[bit] != notDecoded[bit]:
+                    notDecodedErrors += 1
 
-        #simulate channel and code
-        d = np.random.randint(0,2,k)
-        c = encode(states,d,4)
-        v = task1_2.bpsk(i,c)
-        corrected = decode(states,v,4)
-        
-        uncoded = task1_2.bpsk(i,d)
 
-        #check for and count errors
-        errors = 0
-        uncodedErrors = 0
-        for bit in range(len(d)):
-            if d[bit] != corrected[bit]:
-                errors += 1
-            if d[bit] != uncoded[bit]:
-                uncodedErrors += 1
-        results[1][testNum] += errors/500/k
-        results[2][testNum] += uncodedErrors/500/k
- 
-    testNum += 1
+            results[1][testNum] += errors/iters/k
+            results[2][testNum] += uncodedErrors/iters/k
+            results[3][testNum] += notDecodedErrors/iters/k
+    
+        testNum += 1
+    return results
 
-plt.title("BER vs Probability of error")
-plt.xlabel("Eb/N0")
-plt.ylabel("BER")
-plt.yscale("log")
-plt.plot(results[0],results[1],label="Convolutional code")
-plt.plot(results[0],results[2],label="No code")
+if __name__ == "__main__":
+    k = 800
 
-plt.legend()
-plt.grid(which="minor",axis="both")
+    dbs = np.linspace(0,12,25)
 
-plt.show()
+    results = simulate(k,states,dbs,100,task1_2.bpsk)
+
+    plt.title("BER vs Probability of error")
+    plt.xlabel("Eb/N0")
+    plt.ylabel("BER")
+    plt.yscale("log")
+    plt.plot(results[0],results[1],label="Convolutional code")
+    plt.plot(results[0],results[2],label="No code")
+    plt.plot(results[0],results[3],label="Convolutional code not decoded")
+
+
+    plt.legend()
+    plt.grid(which="minor",axis="both")
+
+    plt.show()

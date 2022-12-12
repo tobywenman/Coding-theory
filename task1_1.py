@@ -44,6 +44,7 @@ def calcSyndrome(H,c):
     return tuple(np.remainder(np.matmul(c,Ht),2))
 
 def generateSyndromes(H):
+    """Create the syndrome lookup table"""
     n = np.shape(H)[1]
     lookup = {}
     lookup[(0.0,0.0,0.0,0.0)] = np.zeros(n)
@@ -59,7 +60,7 @@ def decode(H,c,lookup):
     e = lookup[syndrome]
     return np.remainder(c+e,2)[:k]
 
-def generateError(a,c):
+def generateError(a,c,codeRate):
     n=len(c)
     e = np.zeros(n)
     for i in range(n):
@@ -76,7 +77,7 @@ def simulate(p,tests,iter,errorFunc):
     lookup = generateSyndromes(H)
 
     #initalise array to store results
-    results = np.zeros((2,len(tests)))
+    results = np.zeros((4,len(tests)))
     results[0] = tests
     testNum = 0
     for i in tests:
@@ -85,16 +86,24 @@ def simulate(p,tests,iter,errorFunc):
             #simulate channel and code
             d = np.random.randint(0,2,k)
             c = encode(d,G)
-            v = errorFunc(i,c)
+            v = errorFunc(i,c,11/15)
             corrected = decode(H,v,lookup)
-            
+            uncoded = errorFunc(i,d,1)
+            notDecoded = errorFunc(i,d,11/15)
             #check for and count errors
             errors = 0
+            uncodedErrors = 0
+            notDecodedErrors = 0
             for bit in range(len(d)):
                 if d[bit] != corrected[bit]:
                     errors += 1
+                if d[bit] != uncoded[bit]:
+                    uncodedErrors += 1
+                if d[bit] != notDecoded[bit]:
+                    notDecodedErrors += 1
             results[1][testNum] += errors/iter/k
-
+            results[2][testNum] += uncodedErrors/iter/k
+            results[3][testNum] += notDecodedErrors/iter/k
         testNum += 1
 
     return results
@@ -115,8 +124,8 @@ if __name__=="__main__":
     plt.ylabel("BER")
     plt.yscale("log")
     plt.xlim(max(result[0]), min(result[0]))
-    plt.plot(result[0],result[0],label="No code")
-    plt.plot(result[0],result[1],label="Simulated")
+    plt.plot(result[0],result[2],label="No code")
+    plt.plot(result[0],result[1],label="11/15 hamming code")
     plt.plot(probs,pd,label="Theoretical")
 
     plt.legend()

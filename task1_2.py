@@ -6,11 +6,11 @@ from matplotlib import pyplot as plt
 def dbtoabs(db):
     return 10**(db/10)
 
-def bpsk(SNR,c):
+def bpsk(SNR,c,codeRate):
     n=len(c)
     e = np.zeros(n)
     r = np.zeros(n)
-    variance = 1/dbtoabs(SNR)/2
+    variance = 1/(dbtoabs(SNR)*codeRate)/2
 
     #change bit values to signal
     for i in range(n):
@@ -32,13 +32,16 @@ def bpsk(SNR,c):
     return r
 
 if __name__=="__main__": 
-    dbs = np.linspace(-10,5,50)
+    dbs = np.linspace(0,12,50)
     result = task1_1.simulate(4,dbs,1000,bpsk)
 
     plt.title("BER vs Eb/N0")
     plt.xlabel("Eb/N0")
     plt.ylabel("BER")
     plt.yscale("log")
-    plt.plot(result[0],result[1])
+    plt.plot(result[0],result[2],label="No code")
+    plt.plot(result[0],result[1],label="11/15 hamming code")
+    plt.plot(result[0],result[3],label="Not decoded")
+
 
     plt.show()
